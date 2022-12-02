@@ -2,19 +2,17 @@
 
 let InputAccumulator (acc: string list list) curr =
   match curr with
-  | "" -> List.append acc [[]]
-  | f -> match List.rev acc with
-         | x::xs -> List.append xs [(List.append x [f])]
+  | "" -> List.append acc [ [] ]
+  | f ->
+    match List.rev acc with
+    | x :: xs -> List.append xs [ (List.append x [ f ]) ]
 
-let CalculateCaloriesPerElf (input: string list) =
-  input
-  |> List.map(int)
-  |> List.sum
-  
+let CalculateCaloriesPerElf (input: string list) = input |> List.map (int) |> List.sum
+
 let ReadPuzzleInput file =
   file
   |> File.ReadAllLines
-  |> Array.fold InputAccumulator [[]]
+  |> Array.fold InputAccumulator [ [] ]
   |> List.map CalculateCaloriesPerElf
 
 [<EntryPoint>]
@@ -25,8 +23,9 @@ let main argv =
   | x when x = 1 ->
     match File.Exists(argv[0]) with
     | true ->
-      let totalCaloriesPerElf = ReadPuzzleInput argv[0] |> List.sortDescending
-      
+      let totalCaloriesPerElf =
+        ReadPuzzleInput argv[0] |> List.sortDescending
+
       printfn "Max calories for given elves: %i" (totalCaloriesPerElf |> List.head)
       printfn "Total calories top three elves: %i" (totalCaloriesPerElf |> List.take 3 |> List.sum)
       0
