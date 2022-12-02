@@ -9,6 +9,18 @@ type Move =
     | Rock -> 1
     | Paper -> 2
     | Scissors -> 3
+    
+  member this.WinsAgainst() =
+    match this with
+    | Rock -> Scissors
+    | Paper -> Rock
+    | Scissors -> Paper
+  
+  member this.LosesTo() =
+    match this with
+    | Rock -> Paper
+    | Paper -> Scissors
+    | Scissors -> Rock
 
 type MatchResult =
   | Win
@@ -26,11 +38,9 @@ type Round =
 
 let CalculateMatchResult round =
   match round with
-  | MoveMove (Rock, Scissors) -> Loss
-  | MoveMove (Paper, Rock) -> Loss
-  | MoveMove (Scissors, Paper) -> Loss
-  | MoveMove (x, y) when x = y -> Draw
-  | _ -> Win
+  | MoveMove (x, y) when y = x.LosesTo() -> Win
+  | MoveMove (x, y) when y = x.WinsAgainst() -> Loss
+  | _ -> Draw
 
 let CalculateRoundScore round =
   match round with
@@ -73,13 +83,9 @@ let ReadPuzzleInputPartOne file =
 
 let DecideMoveForOutcome move =
   match move with
-  | MoveDesiredOutcome (Rock, Win) -> Paper
-  | MoveDesiredOutcome (Rock, Loss) -> Scissors
-  | MoveDesiredOutcome (Paper, Win) -> Scissors
-  | MoveDesiredOutcome (Paper, Loss) -> Rock
-  | MoveDesiredOutcome (Scissors, Win) -> Rock
-  | MoveDesiredOutcome (Scissors, Loss) -> Paper
-  | MoveDesiredOutcome (x, Draw) -> x
+  | MoveDesiredOutcome(move, Win) -> move.LosesTo()
+  | MoveDesiredOutcome(move, Loss) -> move.WinsAgainst()
+  | MoveDesiredOutcome (move, Draw) -> move
 
 let ReadPuzzleInputPartTwo file =
   file
