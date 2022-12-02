@@ -9,13 +9,13 @@ type Move =
     | Rock -> 1
     | Paper -> 2
     | Scissors -> 3
-    
+
   member this.WinsAgainst() =
     match this with
     | Rock -> Scissors
     | Paper -> Rock
     | Scissors -> Paper
-  
+
   member this.LosesTo() =
     match this with
     | Rock -> Paper
@@ -83,8 +83,8 @@ let ReadPuzzleInputPartOne file =
 
 let DecideMoveForOutcome move =
   match move with
-  | MoveDesiredOutcome(move, Win) -> move.LosesTo()
-  | MoveDesiredOutcome(move, Loss) -> move.WinsAgainst()
+  | MoveDesiredOutcome (move, Win) -> move.LosesTo()
+  | MoveDesiredOutcome (move, Loss) -> move.WinsAgainst()
   | MoveDesiredOutcome (move, Draw) -> move
 
 let ReadPuzzleInputPartTwo file =
