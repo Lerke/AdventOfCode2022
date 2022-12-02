@@ -4,37 +4,35 @@ type Move =
   | Rock
   | Paper
   | Scissors
+  member this.Value() =
+    match this with
+    | Rock -> 1
+    | Paper -> 2
+    | Scissors -> 3
 
 type MatchResult =
   | Win
   | Loss
   | Draw
+  member this.Value() =
+    match this with
+    | Win -> 6
+    | Draw -> 3
+    | Loss -> 0
 
 type Round = Move * Move
 
-let MoveValue move =
-  match move with
-  | Rock -> 1
-  | Paper -> 2
-  | Scissors -> 3
-
-let MatchValue m =
-  match m with
-  | Win -> 6
-  | Draw -> 3
-  | Loss -> 0
-
 let CalculateMatchResult round =
   match round with
-  | (Rock, Scissors) -> Loss
-  | (Paper, Rock) -> Loss
-  | (Scissors, Paper) -> Loss
-  | (x, y) when x = y -> Draw
+  | Rock, Scissors -> Loss
+  | Paper, Rock -> Loss
+  | Scissors, Paper -> Loss
+  | x, y when x = y -> Draw
   | _ -> Win
 
 let CalculateRoundScore round =
   match round with
-  | (rnd, result) -> MoveValue(snd rnd) + MatchValue result
+  | (a: Move, b: Move), (result: MatchResult) -> b.Value() + result.Value()
 
 let Move x =
   match x with
