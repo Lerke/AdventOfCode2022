@@ -20,19 +20,25 @@ type MatchResult =
     | Draw -> 3
     | Loss -> 0
 
-type Round = Move * Move
+type Round =
+  | MoveMove of Move * Move
+  | MoveDesiredOutcome of Move * MatchResult
 
 let CalculateMatchResult round =
   match round with
-  | Rock, Scissors -> Loss
-  | Paper, Rock -> Loss
-  | Scissors, Paper -> Loss
-  | x, y when x = y -> Draw
+  | MoveMove (Rock, Scissors) -> Loss
+  | MoveMove (Paper, Rock) -> Loss
+  | MoveMove (Scissors, Paper) -> Loss
+  | MoveMove (x, y) when x = y -> Draw
   | _ -> Win
 
 let CalculateRoundScore round =
   match round with
-  | (a: Move, b: Move), (result: MatchResult) -> b.Value() + result.Value()
+  | MoveMove (a: Move, b: Move), (result: MatchResult) -> b.Value() + result.Value()
+
+let CalculateDesiredRoundScore round =
+  match round with
+  | MoveDesiredOutcome (opponentMove: Move, desiredResult: MatchResult), (ownMove: Move) -> desiredResult.Value() + ownMove.Value()
 
 let Move x =
   match x with
@@ -43,32 +49,63 @@ let Move x =
   | "C" -> Scissors
   | "Z" -> Scissors
 
+let DesiredResult x =
+  match x with
+  | "X" -> Loss
+  | "Y" -> Draw
+  | "Z" -> Win
+
 let CalculateLineResult (line: string) =
   match line.Split [| ' ' |] with
-  | [| x; y |] -> Round(Move x, Move y)
+  | [| x; y |] -> MoveMove(Move x, Move y)
   | x -> failwithf $"Faulty input: %A{x}"
 
-let ReadPuzzleInput file =
+let CalculateLineDesiredOutcome (line: string) =
+  match line.Split [| ' ' |] with
+  | [| x; y |] -> MoveDesiredOutcome(Move x, DesiredResult y)
+
+let ReadPuzzleInputPartOne file =
   file
   |> File.ReadAllLines
   |> Array.map CalculateLineResult
   |> fun f -> Array.zip f (f |> Array.map CalculateMatchResult)
   |> fun f -> Array.zip f (f |> Array.map CalculateRoundScore)
 
+let DecideMoveForOutcome move =
+  match move with
+  | MoveDesiredOutcome (Rock, Win) -> Paper
+  | MoveDesiredOutcome (Rock, Loss) -> Scissors
+  | MoveDesiredOutcome (Paper, Win) -> Scissors
+  | MoveDesiredOutcome (Paper, Loss) -> Rock
+  | MoveDesiredOutcome (Scissors, Win) -> Rock
+  | MoveDesiredOutcome (Scissors, Loss) -> Paper
+  | MoveDesiredOutcome (x, Draw) -> x
+
+let ReadPuzzleInputPartTwo file =
+  file
+  |> File.ReadAllLines
+  |> Array.map CalculateLineDesiredOutcome
+  |> fun f -> Array.zip f (f |> Array.map DecideMoveForOutcome)
+  |> fun f -> Array.zip f (f |> Array.map CalculateDesiredRoundScore)
+
 [<EntryPoint>]
 let main argv =
-  printfn "* Advent of Code 2022 - Calorie Counting"
+  printfn "* Advent of Code 2022 - Rock Paper Scissors"
 
   match Array.length argv with
   | x when x = 1 ->
     match File.Exists(argv[0]) with
     | true ->
-      let matchResults = ReadPuzzleInput argv[0]
+      printfn
+        "Total score: %i"
+        ((ReadPuzzleInputPartOne argv[0])
+         |> Array.sumBy (fun f -> snd f))
 
-      let totalScore =
-        matchResults |> Array.sumBy (fun f -> snd f)
+      printfn
+        "Part two total score: %i"
+        ((ReadPuzzleInputPartTwo argv[0])
+         |> Array.sumBy (fun f -> snd f))
 
-      printfn "Total score: %i" totalScore
       0
     | _ ->
       printfn "Did not find file!"
