@@ -1,5 +1,4 @@
 ﻿open System.IO
-open System.Text.Json
 
 let ItemValue (c: char) =
     ([ 0..64 ] // Padding
