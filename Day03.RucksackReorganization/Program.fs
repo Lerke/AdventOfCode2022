@@ -16,6 +16,11 @@ type Compartment(line: string) =
 type Rucksack(compartments: (Compartment * Compartment)) =
     member this.Compartments = compartments
 
+    member this.AllItems =
+        Array.append ((fst compartments).Items |> Map.toArray) ((snd compartments).Items |> Map.toArray)
+        |> Seq.groupBy (fun f -> fst f)
+        |> Seq.fold (fun acc curr -> (acc |> Map.add (fst curr) (snd curr |> Seq.length))) (Map<char, int> [])
+
     member this.SharedItems =
         Map.toArray (fst compartments).Items
         |> Array.allPairs (Map.toArray (snd compartments).Items)
@@ -30,6 +35,12 @@ let ParseRucksack (line: string) =
     |> Array.map (Compartment)
     |> fun f -> Rucksack((f[0], f[1]))
 
+let FindSharedItemInRucksacks (rucksacks: Rucksack []) =
+    rucksacks[0].AllItems.Keys
+    |> Seq.find (fun f ->
+        (Map.containsKey f rucksacks[1].AllItems)
+        && (Map.containsKey f rucksacks[2].AllItems))
+
 let ParsePuzzleInput file = file |> File.ReadAllLines |> Array.map ParseRucksack
 
 [<EntryPoint>]
@@ -41,9 +52,17 @@ let main argv =
         match File.Exists(argv[0]) with
         | true ->
             let rucksacks = (ParsePuzzleInput argv[0])
+
+            // Part one
             let sharedItemsPerRucksack = rucksacks |> Array.collect (fun f -> f.SharedItems)
             let totalSumSharedItems = sharedItemsPerRucksack |> Array.sumBy (snd)
-            printfn "Total sum: %i" totalSumSharedItems
+            printfn "[*] Total sum shared items: %i" totalSumSharedItems
+
+            // Part two
+            let elfGroups = rucksacks |> Array.chunkBySize 3
+            let elfGroupsWithBadges = elfGroups |> Array.map (FindSharedItemInRucksacks)
+            let totalSumBadges = elfGroupsWithBadges |> Array.sumBy (ItemValue)
+            printfn "[**] Total sum shared badges: %i" totalSumBadges
             0
         | _ ->
             printfn "Did not find file!"
