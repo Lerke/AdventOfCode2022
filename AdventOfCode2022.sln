@@ -6,6 +6,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day02.RockPaperScissors", "
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day03.RucksackReorganization", "Day03.RucksackReorganization\Day03.RucksackReorganization.fsproj", "{25820BAF-9907-4EEE-B64F-0974F934B7C4}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day04.CampCleanup", "Day04.CampCleanup\Day04.CampCleanup.fsproj", "{E9FE4864-55E6-4736-99EA-FFA9F86C4F57}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{25820BAF-9907-4EEE-B64F-0974F934B7C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{25820BAF-9907-4EEE-B64F-0974F934B7C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{25820BAF-9907-4EEE-B64F-0974F934B7C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9FE4864-55E6-4736-99EA-FFA9F86C4F57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9FE4864-55E6-4736-99EA-FFA9F86C4F57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9FE4864-55E6-4736-99EA-FFA9F86C4F57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9FE4864-55E6-4736-99EA-FFA9F86C4F57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
