@@ -1,21 +1,26 @@
 ﻿namespace Day05
 
 module Stack =
-  type 'a stack =
-    | Empty
-    | Node of 'a * 'a stack
-    
-  let peek = function
-    | Node(x, stack) -> Some(x)
-    | Empty -> None
+    type 'a stack = StackContents of 'a list
 
-  let push x stack = Node(x, stack)
-  
-  let tail = function
-    | Node (x, stack) -> stack
-    | Empty -> Empty
+    let peek (StackContents stack) =
+        match stack with
+        | x :: xs -> Some(x)
+        | _ -> None
 
-  let pop =
-    function
-    | Node (x, stack) -> Node(x, tail stack)
-    | Empty -> Empty
+    let push x (StackContents stack) = StackContents(x @ stack)
+
+    let tail stack =
+        match stack with
+        | x :: xs -> Some(xs)
+        | _ -> None
+
+    let pop (StackContents stack) =
+        match stack with
+        | x :: xs -> ([ x ], StackContents xs)
+        | _ -> ([], StackContents [])
+
+    let empty = StackContents []
+
+    let popMany number (StackContents stack) =
+        (List.take ((min number (List.length stack))) stack, StackContents(List.skip (min number (List.length stack)) stack))
