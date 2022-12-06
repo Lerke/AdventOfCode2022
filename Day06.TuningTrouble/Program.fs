@@ -19,7 +19,7 @@ let main argv =
     | true ->
       let [ startOfPacket; startOfMessage ] =
         [ 4; 14 ]
-        |> List.map (fun f -> GetFirstUniqueSubstring 4 0 [] ((File.ReadAllText argv[0]) |> Seq.toList))
+        |> List.map (fun f -> GetFirstUniqueSubstring f 0 [] ((File.ReadAllText argv[0]) |> Seq.toList))
 
       [ ("* ", startOfPacket)
         ("**", startOfMessage) ]
