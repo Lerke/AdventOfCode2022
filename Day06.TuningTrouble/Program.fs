@@ -1,5 +1,4 @@
 ﻿open System.IO
-open Microsoft.FSharp.Collections
 
 let rec GetFirstUniqueSubstring packetLength index (state: char list) (line: char list) =
   match line with
@@ -18,11 +17,9 @@ let main argv =
   | x when x = 1 ->
     match File.Exists(argv[0]) with
     | true ->
-      let startOfPacket =
-        GetFirstUniqueSubstring 4 0 [] ((File.ReadAllText argv[0]) |> Seq.toList)
-
-      let startOfMessage =
-        GetFirstUniqueSubstring 14 0 [] ((File.ReadAllText argv[0]) |> Seq.toList)
+      let [ startOfPacket; startOfMessage ] =
+        [ 4; 14 ]
+        |> List.map (fun f -> GetFirstUniqueSubstring 4 0 [] ((File.ReadAllText argv[0]) |> Seq.toList))
 
       [ ("* ", startOfPacket)
         ("**", startOfMessage) ]
@@ -34,7 +31,6 @@ let main argv =
 
       0
     | _ ->
-      // let s = stack
       printfn "Did not find file!"
       1
   | _ ->
