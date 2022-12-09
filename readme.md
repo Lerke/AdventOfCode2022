@@ -10,3 +10,4 @@ My own solutions to the Advent of Code 2022 problems.
 | 4   | F#       | :star2: :star2: | [Day04.CampCleanup](https://github.com/Lerke/AdventOfCode2022/tree/main/Day04.CampCleanup)                       |
 | 5   | F#       | :star2: :star2: | [Day05.SupplyStacks](https://github.com/Lerke/AdventOfCode2022/tree/main/Day05.SupplyStacks)                     |
 | 6   | F#       | :star2: :star2: | [Day06.TuningTrouble](https://github.com/Lerke/AdventOfCode2022/tree/main/Day06.TuningTrouble)                   |
+| 7   | F#       | :star2:         | [Day07.NoSpaceLeftOnDevice](https://github.com/Lerke/AdventOfCode2022/tree/main/Day07.NoSpaceLeftOnDevice)             |

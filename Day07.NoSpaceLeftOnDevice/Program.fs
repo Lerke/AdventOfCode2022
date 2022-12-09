@@ -83,13 +83,16 @@ let rec BuildTreeFromInput (input: Input list) (current: DirectoryNode) =
          | Directory dd -> dd)
     | None -> current
 
-let rec DirectoriesLargerThan (threshold: int) (root: DirectoryNode) =
-  root.Nodes
-  |> List.filter (fun f -> match f with | Directory dir -> true | _ -> false)
-  |> List.collect (fun f ->
-    match f with
-    | Directory d -> DirectoriesLargerThan threshold d)
-  |> List.map id
+let rec DirectoriesSmallerThan (threshold: int) (root: DirectoryNode) =
+  List.append
+    (root.Nodes |> List.collect (fun f -> match f with | Directory d when d.Size() <= threshold -> [d] | _ -> []))
+    (root.Nodes |> List.collect (fun f -> match f with | Directory d -> DirectoriesSmallerThan threshold d | _ -> []))
+  
+  // root.Nodes
+  // |> List.filter (fun f -> match f with | Directory dir -> true | _ -> false)
+  // |> List.collect (fun f ->
+  //   match f with
+  //   | Directory d -> DirectoriesLargerThan threshold d)
 
 let rec PrettyTree idt (root: DirectoryNode) =
   let indent =
@@ -127,11 +130,11 @@ let main argv =
 
       let rootNode = (DirectoryNode("/", [], None))
       let root = BuildTreeFromInput (input |> List.skip 1) (rootNode)
-      let largeDirs = root |> DirectoriesLargerThan 100
+      let largeDirs = root |> DirectoriesSmallerThan 100000
 
 
       PrettyTree 0 root
-      printfn "%A" largeDirs
+      printfn "[*] Directories smaller than 100000 sum: %i" (largeDirs |> List.sumBy (fun d -> d.Size()))
       0
     | _ ->
       printfn "Did not find file!"
