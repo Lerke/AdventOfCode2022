@@ -1,99 +1,141 @@
 ﻿open System.IO
 
 type FSNode =
-    | Directory of DirectoryNode
-    | File of FileNode
+  | Directory of DirectoryNode
+  | File of FileNode
 
-and FileNode = { Name: string; Size: int; Parent: DirectoryNode option }
-and DirectoryNode = { Name: string; Nodes: FSNode list; Parent: DirectoryNode option }
+and FileNode(name: string, size: int, parent: FSNode option) =
+  member val Name = name
+  member val Size = size
+  member val Parent = parent
 
-let ParseFSNode (line: string) =
-    match (line.Split " ") with
-    | x when x[0] = "dir" -> Directory { Name = x[1]; Nodes = []; Parent = None }
-    | x -> File { Name = x[1]; Size = (x[0] |> int); Parent = None }
+and DirectoryNode(name: string, nodes: FSNode list, parent: FSNode option) =
+  member val Name = name
+  member val Nodes = nodes with get, set
+  member val Parent = parent
+
+  member this.Size() =
+    this.Nodes
+    |> List.map (fun f ->
+      match f with
+      | Directory directoryNode -> directoryNode.Size()
+      | File file -> file.Size)
+    |> List.sum
+
+let ParseFSNode (parent: DirectoryNode) (line: string) =
+  match (line.Split " ") with
+  | x when x[0] = "dir" -> Directory(DirectoryNode(x[1], [], Some(Directory parent)))
+  | x -> File(FileNode(x[1], (x[0] |> int), Some(Directory parent)))
 
 type OSCommand =
-    | ListDirectory
-    | UpDirectory
-    | ChangeDirectory of string
+  | ListDirectory
+  | UpDirectory
+  | ChangeDirectory of string
 
 let ParseCommand (c: string) =
-    match (c.Split " ") with
-    | x when x[1] = "ls" -> ListDirectory
-    | x when x[1] = "cd" && x[2] = ".." -> UpDirectory
-    | x when x[1] = "cd" -> ChangeDirectory x[2]
+  match (c.Split " ") with
+  | x when x[1] = "ls" -> ListDirectory
+  | x when x[1] = "cd" && x[2] = ".." -> UpDirectory
+  | x when x[1] = "cd" -> ChangeDirectory x[2]
 
-type Input = { Command: OSCommand; Output: string list }
+type Input =
+  { Command: OSCommand
+    Output: string list }
 
 let rec ParseInput (lines: string list) (input: Input list) (current: Input) =
-    match lines with
-    | x :: xs when x.StartsWith "$" ->
-        // Start new command
-        ParseInput xs (input @ [ current ]) { Command = ParseCommand x; Output = [] }
-    | x :: xs -> ParseInput xs input { current with Output = (current.Output @ [ x ]) }
-    | _ -> (input @ [ current ])
+  match lines with
+  | x :: xs when x.StartsWith "$" ->
+    // Start new command
+    ParseInput
+      xs
+      (input @ [ current ])
+      { Command = ParseCommand x
+        Output = [] }
+  | x :: xs -> ParseInput xs input { current with Output = (current.Output @ [ x ]) }
+  | _ -> (input @ [ current ])
 
-let rec BuildTreeFromInput (input: Input list) (current) =
-    match input with
-    | x :: xs ->
-        match x.Command with
-        | ListDirectory -> BuildTreeFromInput xs ({ current with Nodes = (x.Output |> List.map ParseFSNode) })
-        | ChangeDirectory d ->
-            ({ current with
-                 Nodes =
-                     (current.Nodes
-                      |> List.map (fun f ->
-                          match f with
-                          | Directory n when n.Name = d -> Directory(BuildTreeFromInput xs { n with Parent = (Some current) })
-                          | _ -> f))
-             })
-        | UpDirectory -> { current with Parent = Some (BuildTreeFromInput xs current.Parent.Value) }
-    | _ -> current
+let rec BuildTreeFromInput (input: Input list) (current: DirectoryNode) =
+  match input with
+  | x :: xs ->
+    match x.Command with
+    | UpDirectory ->
+      match current.Parent.Value with
+      | Directory d -> BuildTreeFromInput xs d
+    | ListDirectory ->
+      current.Nodes <- (x.Output |> List.map (ParseFSNode current))
+      BuildTreeFromInput xs current
+    | ChangeDirectory d ->
+      let destination =
+        (current.Nodes)
+        |> (List.find (fun f ->
+          match f with
+          | Directory dd when dd.Name = d -> true
+          | _ -> false))
+
+      match destination with
+      | Directory directoryNode -> BuildTreeFromInput xs directoryNode
+  | _ ->
+    match current.Parent with
+    | Some x ->
+      BuildTreeFromInput
+        []
+        (match x with
+         | Directory dd -> dd)
+    | None -> current
+
+let rec DirectoriesLargerThan (threshold: int) (root: DirectoryNode) =
+  root.Nodes
+  |> List.filter (fun f -> match f with | Directory dir -> true | _ -> false)
+  |> List.collect (fun f ->
+    match f with
+    | Directory d -> DirectoriesLargerThan threshold d)
+  |> List.map id
 
 let rec PrettyTree idt (root: DirectoryNode) =
-    let indent =
-        List.init idt (fun f -> "    ") |> List.fold (fun acc curr -> acc + curr) ""
+  let indent =
+    List.init idt (fun f -> "    ") |> List.fold (fun acc curr -> acc + curr) ""
 
-    printfn "%s- %s (dir)" indent root.Name
+  printfn "%s- %s (dir, total_size=%i)" indent root.Name (root.Size())
 
-    root.Nodes
-    |> List.iter (fun f ->
-        match f with
-        | Directory d -> (PrettyTree (idt + 1) d)
-        | File file -> ())
+  root.Nodes
+  |> List.iter (fun f ->
+    match f with
+    | Directory d -> (PrettyTree (idt + 1) d)
+    | File file -> ())
 
-    root.Nodes
-    |> List.iter (fun f ->
-        match f with
-        | Directory d -> ()
-        | File file -> (printfn "%s- %s (file, size=%i)" ("    " + indent) file.Name file.Size))
-// [ 0..idt ] |> List.iter (fun f -> printf "\t")
+  root.Nodes
+  |> List.iter (fun f ->
+    match f with
+    | Directory d -> ()
+    | File file -> (printfn "%s- %s (file, size=%i)" ("    " + indent) file.Name file.Size))
 
 
 [<EntryPoint>]
 let main argv =
-    printfn "* Advent of Code 2022 - Tuning Trouble"
+  printfn "* Advent of Code 2022 - Tuning Trouble"
 
-    match Array.length argv with
-    | x when x = 1 ->
-        match File.Exists(argv[0]) with
-        | true ->
-            let initialCommand = { Command = ChangeDirectory "/"; Output = [] }
+  match Array.length argv with
+  | x when x = 1 ->
+    match File.Exists(argv[0]) with
+    | true ->
+      let initialCommand =
+        { Command = ChangeDirectory "/"
+          Output = [] }
 
-            let input =
-                ParseInput (File.ReadAllLines argv[0] |> Array.skip 1 |> Array.toList) [] initialCommand
+      let input =
+        ParseInput (File.ReadAllLines argv[0] |> Array.skip 1 |> Array.toList) [] initialCommand
 
-            let root =
-                BuildTreeFromInput (input |> List.skip 1) { Name = "/"; Nodes = []; Parent = None }
+      let rootNode = (DirectoryNode("/", [], None))
+      let root = BuildTreeFromInput (input |> List.skip 1) (rootNode)
+      let largeDirs = root |> DirectoriesLargerThan 100
 
-            // printf "%A" input
-            // printf "%A" root
 
-            PrettyTree 0 root
-            0
-        | _ ->
-            printfn "Did not find file!"
-            1
+      PrettyTree 0 root
+      printfn "%A" largeDirs
+      0
     | _ ->
-        printfn "Usage: dotnet <path-to-input>"
-        1
+      printfn "Did not find file!"
+      1
+  | _ ->
+    printfn "Usage: dotnet <path-to-input>"
+    1
