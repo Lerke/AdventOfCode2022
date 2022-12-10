@@ -90,10 +90,6 @@ let rec CollectDirectories fn (root: DirectoryNode) =
              | Directory d -> CollectDirectories fn d
              | _ -> []))
 
-// let rec CollectDirectories (root: DirectoryNode) =
-//     List.append
-//     ( root.Nodes |> List.collect (fun f -> ))
-
 let rec PrettyTree idt (root: DirectoryNode) =
     let indent =
         List.init idt (fun f -> "    ") |> List.fold (fun acc curr -> acc + curr) ""
