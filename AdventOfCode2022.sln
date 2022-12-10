@@ -14,6 +14,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day06.TuningTrouble", "Day0
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day07.NoSpaceLeftOnDevice", "Day07.NoSpaceLeftOnDevice\Day07.NoSpaceLeftOnDevice.fsproj", "{2F1B30EC-5024-4CC4-AE93-72B3655EA8A0}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day08.TreetopTreeHouse", "Day08.TreetopTreeHouse\Day08.TreetopTreeHouse.fsproj", "{96CEF8C9-EB1C-499C-AEE1-A48DAEBDB2B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{2F1B30EC-5024-4CC4-AE93-72B3655EA8A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F1B30EC-5024-4CC4-AE93-72B3655EA8A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F1B30EC-5024-4CC4-AE93-72B3655EA8A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96CEF8C9-EB1C-499C-AEE1-A48DAEBDB2B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96CEF8C9-EB1C-499C-AEE1-A48DAEBDB2B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96CEF8C9-EB1C-499C-AEE1-A48DAEBDB2B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96CEF8C9-EB1C-499C-AEE1-A48DAEBDB2B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

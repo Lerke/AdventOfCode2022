@@ -115,7 +115,7 @@ let rec PrettyTree idt (root: DirectoryNode) =
 
 [<EntryPoint>]
 let main argv =
-    printfn "* Advent of Code 2022 - Tuning Trouble"
+    printfn "* Advent of Code 2022 - No Space Left On Device"
 
     match Array.length argv with
     | x when x = 1 ->
