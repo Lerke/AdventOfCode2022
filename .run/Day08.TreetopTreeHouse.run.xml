@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Day08.TreetopTreeHouse" type="DotNetProject" factoryName=".NET Project">
-    <option name="EXE_PATH" value="$PROJECT_DIR$/Day08.TreetopTreeHouse/bin/Debug/net7.0/Day08.TreetopTreeHouse" />
+    <option name="EXE_PATH" value="$PROJECT_DIR$/Day08.TreetopTreeHouse/bin/Debug/net7.0/Day08.TreetopTreeHouse.exe" />
     <option name="PROGRAM_PARAMETERS" value="./puzzle-input.txt" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Day08.TreetopTreeHouse/bin/Debug/net7.0" />
     <option name="PASS_PARENT_ENVS" value="1" />
