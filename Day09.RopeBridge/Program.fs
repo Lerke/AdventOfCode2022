@@ -6,6 +6,7 @@ type Input = Position
 and Position(x: int, y: int) =
   member val x = x
   member val y = y
+  static member Origin = Position(0, 0)
   static member Left = Position(-1, 0)
   static member Right = Position(1, 0)
   static member Up = Position(0, 1)
@@ -29,27 +30,30 @@ and Position(x: int, y: int) =
 
 type Rope =
   { Head: Position
-    Tail: Position
-    TailPositions: Position list }
+    Tail: Rope option
+    PositionsVisited: Position list }
 
   member this.Move(direction: Position) =
     let newHead = this.Head + direction
-    let newTail = this.Tail + (this.Tail --> newHead)
-    let tailPositions = this.TailPositions @ [ this.Tail ]
+
+    let newTail =
+      match this.Tail with
+      | Some t -> Some(t.Move(t.Head --> newHead))
+      | None -> None
 
     { Head = newHead
       Tail = newTail
-      TailPositions = tailPositions }
+      PositionsVisited = this.PositionsVisited @ [ newHead ] }
 
   member this.TailPositionsVisited() =
-    (this.Tail :: this.TailPositions)
+    (this.Head :: this.PositionsVisited)
     |> List.distinctBy (fun f -> (f.x, f.y))
     |> List.length
 
 let rec ApplyRopeInput (rope: Rope) (input: Input list) (state: Rope list) =
-   match input with 
-   | [] -> [ rope ]
-   | x :: xs -> (ApplyRopeInput (rope.Move x) xs (state @ [rope]))
+  match input with
+  | [] -> [ rope ]
+  | x :: xs -> (ApplyRopeInput (rope.Move x) xs (state @ [ rope ]))
 
 let rec ParseInputCommands (lines: string list) =
   match lines with
@@ -62,20 +66,32 @@ let rec ParseInputCommands (lines: string list) =
     @ ParseInputCommands xs
   | _ -> []
 
+let rec BuildRope knots =
+  match knots with
+  | k when k > 0 ->
+    { Head = Position.Origin
+      Tail = Some(BuildRope(k - 1))
+      PositionsVisited = [] }
+  | _ ->
+    { Head = Position.Origin
+      Tail = None
+      PositionsVisited = [] }
+
+let rec UnwrapRopes (rope: Rope option) =
+  match rope with
+  | Some r -> r :: (UnwrapRopes r.Tail)
+  | _ -> []
+
 let PrettyPrintState (rope: Rope) =
-  let maxPos =
-    ([ rope.Head; rope.Tail ] @ rope.TailPositions)
-    |> List.maxBy (fun f -> max f.x f.y)
+  let maxPos = Position(5, 5)
+  let allropes = UnwrapRopes(Some rope)
 
   let dimensions = (max maxPos.x maxPos.y) + 1
 
   let grid =
     Array2D.init dimensions dimensions (fun x y ->
-      match rope with
-      | r when r.Head.x = x && r.Head.y = y -> 'H'
-      | r when r.Tail.x = x && r.Tail.y = y -> 'T'
-      | _ when x = 0 && y = 0 -> 's'
-      | r when (r.TailPositions |> (List.tryFind (fun f -> f.x = x && f.y = y))).IsSome -> '#'
+      match (x, y) with
+      | f when (allropes |> List.tryFind (fun f -> f.Head.x = x && f.Head.y = y)).IsSome -> 'H'
       | _ -> '.')
 
   [| 0 .. (dimensions - 1) |]
@@ -92,17 +108,15 @@ let main argv =
   | x when x = 1 ->
     match File.Exists(argv[0]) with
     | true ->
-      let initialState =
-        { Head = Position(0, 4)
-          Tail = Position(0, 4)
-          TailPositions = [] }
+      let smallRope = BuildRope 1
 
       let inputCommands = ParseInputCommands(File.ReadAllLines argv[0] |> Array.toList)
-      let moved = ApplyRopeInput initialState inputCommands []
-
-      // moved |> List.iter (PrettyPrintState)
-
+      let moved = UnwrapRopes (Some (List.last (ApplyRopeInput smallRope inputCommands [])))
       printfn $"[* ] Total tail positions visited: %i{(List.last moved).TailPositionsVisited()}"
+
+      let bigRope = BuildRope 9
+      let movedBigRope = UnwrapRopes (Some (List.last (ApplyRopeInput bigRope inputCommands [])))
+      printfn $"[**] Total tail positions visited: %i{(List.last movedBigRope).TailPositionsVisited()}"
       0
     | _ ->
       printfn "Did not find file!"
