@@ -18,6 +18,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day08.TreetopTreeHouse", "D
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day09.RopeBridge", "Day09.RopeBridge\Day09.RopeBridge.fsproj", "{B99C3E10-FB32-478D-85D6-FF366A309B32}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day10.CathodeRayTube", "Day10.CathodeRayTube\Day10.CathodeRayTube.fsproj", "{F3ABC013-55F3-4EB4-957A-478000E081F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -60,5 +62,9 @@ Global
 		{B99C3E10-FB32-478D-85D6-FF366A309B32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B99C3E10-FB32-478D-85D6-FF366A309B32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B99C3E10-FB32-478D-85D6-FF366A309B32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3ABC013-55F3-4EB4-957A-478000E081F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3ABC013-55F3-4EB4-957A-478000E081F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3ABC013-55F3-4EB4-957A-478000E081F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3ABC013-55F3-4EB4-957A-478000E081F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
