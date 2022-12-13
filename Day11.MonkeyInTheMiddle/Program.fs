@@ -1,5 +1,4 @@
-﻿open System
-open System.IO
+﻿open System.IO
 open System.Text.RegularExpressions
 
 let ParseExpression =
@@ -7,37 +6,40 @@ let ParseExpression =
     @"(?<monkey_def>Monkey (?<monkey_number>\d+):\n\s Starting items: (?<monkey_starting_items>(\d+,?\s?)+)\n\s+Operation: (?<monkey_operation>[^\n]+)\n\s+Test:\s(?<monkey_test>[^\n]+)\n\s+If true: (?<monkey_if_true>[^\n]+)\n\s+If false: (?<monkey_if_false>[^\n]+))",
     RegexOptions.Singleline
   )
-  
-let DebugPrint = false
 
 type MonkeyOperator =
   | MonkeyAddition
   | MonkeyMultiplication
 
-type Item = { WorryLevel: bigint }
+type Item = { WorryLevel: int64 }
 
 type Monkey =
-  { MonkeyNumber: int
+  { MonkeyNumber: int64
     Items: Item list
+    DivisionFactor: int64
     Operation: Item -> Item
-    Test: Item -> bigint
-    RoundInspections: bigint }
+    Test: Item -> int64
+    RoundInspections: int64 }
 
-let MonkeyPrint f =
-  match DebugPrint with
-  | true -> printfn "%s" f
-  | false -> ()
+let rec LCM (a: int64) (b: int64) =
+  match (a % b) with
+  | 0L -> a
+  | x -> a * (LCM b x) / x
+
+let MonkeyLcm (monkeys: Monkey list) =
+  (monkeys |> List.skip 2)
+  |> List.fold (fun acc curr -> LCM acc curr.DivisionFactor) (monkeys |> List.take 2 |> (fun f -> LCM f[0].DivisionFactor f[1].DivisionFactor))
 
 let MonkeyOperation paramA paramB operator item =
   let x =
     match paramA with
     | "old" -> item.WorryLevel
-    | f -> (bigint (f |> int))
+    | f -> ((f |> int64))
 
   let y =
     match paramB with
     | "old" -> item.WorryLevel
-    | f -> (bigint (f |> int))
+    | f -> ((f |> int64))
 
   let op =
     match operator with
@@ -45,21 +47,6 @@ let MonkeyOperation paramA paramB operator item =
     | MonkeyMultiplication -> (*)
 
   let result = op x y
-
-  match (paramA, paramB) with
-  | (fx, fy) when fx = fy ->
-    match operator with
-    | (MonkeyAddition) -> MonkeyPrint $"\t\tWorry level is added to itself to %A{result}f"
-    | (MonkeyMultiplication) -> MonkeyPrint $"\t\tWorry level is multiplied by itself to %A{result}"
-  | (fx, fy) when fx = "old" || fy = "old" ->
-    match operator with
-    | (MonkeyAddition) -> MonkeyPrint $"\t\tWorry level is added with %A{y} to %A{result}"
-    | (MonkeyMultiplication) -> MonkeyPrint $"\t\tWorry level is multiplied by %A{y} to %A{result}"
-  | (fx, fy) ->
-    match operator with
-    | (MonkeyAddition) -> MonkeyPrint $"\t\tWorry level is set to constant %A{(x + y)}"
-    | (MonkeyMultiplication) -> MonkeyPrint $"\t\tWorry level is set to constant %A{(x * y)}"
-
   { item with WorryLevel = result }
 
 let rec ParseMonkeyOperation (line: string) =
@@ -72,16 +59,12 @@ let rec ParseMonkeyOperation (line: string) =
 
   MonkeyOperation a b operation
 
-let MonkeyTest (div: bigint) (dst_true: bigint) (dst_false: bigint) item =
+let MonkeyTest (div: int64) (dst_true: int64) (dst_false: int64) item =
   let result = item.WorryLevel % div
 
   match result with
-  | x when (x = (bigint 0)) ->
-    MonkeyPrint $"\t\tCurrent worry level is divisible by %A{div}."
-    dst_true
-  | _ ->
-    MonkeyPrint $"\t\tCurrent worry level is not divisible by %A{div}."
-    dst_false
+  | x when (x = (0L)) -> dst_true
+  | _ -> dst_false
 
 let ParseInput (lines: string) =
   let monkey_matches = ParseExpression.Matches(lines.Replace("\r\n", "\n"))
@@ -89,25 +72,22 @@ let ParseInput (lines: string) =
   let monkeys =
     monkey_matches
     |> Seq.map (fun f ->
-      { MonkeyNumber = f.Groups["monkey_number"].Value |> int
+      { MonkeyNumber = f.Groups["monkey_number"].Value |> int64
+        DivisionFactor = ((Array.last (f.Groups[ "monkey_test" ].Value.Split [| ' ' |])) |> int64)
         Items =
           (f.Groups[ "monkey_starting_items" ].Value.Split [| ' ' |]
-           |> Array.map (fun f -> { WorryLevel = bigint ((f.Replace(",", "") |> int)) })
+           |> Array.map (fun f -> { WorryLevel = ((f.Replace(",", "") |> int64)) })
            |> Array.toList)
         Operation = ParseMonkeyOperation(f.Groups["monkey_operation"].Value)
         Test =
           (MonkeyTest
-            (bigint ((Array.last (f.Groups[ "monkey_test" ].Value.Split [| ' ' |])) |> int))
-            (bigint (Array.last (f.Groups[ "monkey_if_true" ].Value.Split [| ' ' |]) |> int))
-            (bigint (Array.last (f.Groups[ "monkey_if_false" ].Value.Split [| ' ' |]) |> int)))
+            (((Array.last (f.Groups[ "monkey_test" ].Value.Split [| ' ' |])) |> int64))
+            ((Array.last (f.Groups[ "monkey_if_true" ].Value.Split [| ' ' |]) |> int64))
+            ((Array.last (f.Groups[ "monkey_if_false" ].Value.Split [| ' ' |]) |> int64)))
         RoundInspections = 0 })
     |> Seq.toList
 
   monkeys
-
-let PrintInspectionsPerRound (monkeys: Monkey list) =
-  monkeys
-  |> List.iteri (fun i f -> MonkeyPrint $"Monkey %i{i} inspected items %A{f.RoundInspections} times")
 
 let rec SimulateRound (monkeys: Monkey list) monkeyIdx withDivision =
 
@@ -115,22 +95,17 @@ let rec SimulateRound (monkeys: Monkey list) monkeyIdx withDivision =
   | x when (x < monkeys.Length) ->
     let monkeyArr = monkeys |> List.toArray
     let monkey = monkeyArr[monkeyIdx]
-    MonkeyPrint $"Monkey %i{monkeyIdx}:"
 
     let newItems =
       monkey.Items
       |> List.map (fun f ->
-        MonkeyPrint $"\tMonkey inspects an item with a worry level of %A{f.WorryLevel}"
         let inter = (monkey.Operation f)
 
         let interAfterBored =
           match withDivision with
-          | true -> { inter with WorryLevel = (inter.WorryLevel / (bigint 3)) }
-          | fasle -> inter
-
-        MonkeyPrint $"\t\tMonkey gets bored with item. Worry level is divided by 3 to %A{interAfterBored.WorryLevel}"
+          | true -> { inter with WorryLevel = (inter.WorryLevel / (3L)) }
+          | false -> { inter with WorryLevel = (inter.WorryLevel % (MonkeyLcm monkeys)) }
         let newMonkey = monkey.Test interAfterBored
-        MonkeyPrint $"\t\tItem with worry level %A{interAfterBored.WorryLevel} is thrown to monkey %A{newMonkey}"
         (newMonkey, interAfterBored))
 
     let newMonkeys =
@@ -172,7 +147,7 @@ let main argv =
       let inspections = after20Round |> List.map (List.map (fun z -> z.RoundInspections))
 
       let inspectionsSum =
-        List.fold (fun acc curr -> (List.zip acc curr) |> List.map (fun i -> (fst i) + (snd i))) (List.init inspections[0].Length (fun i -> bigint 0)) inspections
+        List.fold (fun acc curr -> (List.zip acc curr) |> List.map (fun i -> (fst i) + (snd i))) (List.init inspections[0].Length (fun i -> 0L)) inspections
 
       let monkeyBusiness =
         ((List.sortDescending inspectionsSum) |> List.take 2)
@@ -186,7 +161,10 @@ let main argv =
         after10000Round |> List.map (List.map (fun z -> z.RoundInspections))
 
       let inspectionsSumAfter10000 =
-        List.fold (fun acc curr -> (List.zip acc curr) |> List.map (fun i -> (fst i) + (snd i))) (List.init inspectionsAfter10000[0].Length (fun i -> bigint 0)) inspectionsAfter10000
+        List.fold
+          (fun acc curr -> (List.zip acc curr) |> List.map (fun i -> (fst i) + (snd i)))
+          (List.init inspectionsAfter10000[0].Length (fun i -> 0L))
+          inspectionsAfter10000
 
       let monkeyBusinessAfter10000 =
         ((List.sortDescending inspectionsSumAfter10000) |> List.take 2)
