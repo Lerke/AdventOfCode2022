@@ -1,5 +1,8 @@
 ﻿open System
+open System.Collections.Generic
 open System.IO
+open System.Reflection
+open System.Runtime.InteropServices
 
 type Position(x: int, y: int) =
     member val x = x
@@ -16,10 +19,30 @@ type Position(x: int, y: int) =
         match o with
         | :? Position as p -> p.x = x && p.y = y
 
+    override this.GetHashCode() = $"{x}_{y}".GetHashCode()
+
+    interface IComparable with
+        member this.CompareTo(o) =
+            match o with
+            | :? Position as sc -> compare $"{x}_{y}" $"{sc.x}_{sc.y}"
+            | _ -> -1
+
 type Node(Position: Position, Links: Node list, Height: char) =
     member val Position = Position
     member val Links = Links with get, set
     member val Height = Height
+
+    override this.Equals(o) =
+        match o with
+        | :? Node as p -> p.Position.x = Position.x && p.Position.y = Position.y
+
+    override this.GetHashCode() = $"{Position.x}_{Position.y}".GetHashCode()
+
+    interface IComparable with
+        member this.CompareTo(o) =
+            match o with
+            | :? Node as sc -> compare Position sc.Position
+            | _ -> -1
 
 type DijkstraState = { Vertex: Node; ShortestDistance: int option; Previous: Node option }
 
@@ -85,41 +108,43 @@ let SolveMapDijkstra (startNode: Node) (endNode: Node) (vertices: Node list) =
             | true -> { Vertex = f; ShortestDistance = Some 0; Previous = None }
             | false -> { Vertex = f; ShortestDistance = None; Previous = None })
 
-    let rec SolveMapRec (visited: Node list) (unvisited: Node list) (state: DijkstraState list) =
+    let exclude l1 l2 = List.filter (fun f -> (List.tryFind (fun g -> f = g) l2).IsNone) l1
+
+    let rec SolveMapRec (visited: Node list) (unvisited: Node list) (state: DijkstraState list) (lastVisited: Node option) =
+        printfn "%i / %i" (List.length visited) (List.length unvisited)
         // Take an element from unvisited node.
         match unvisited with
         | x :: xs ->
             // Calculate distance to connected nodes
             let currentDistance =
-                (state |> List.find (fun f -> f.Vertex = x))
+                match (state |> List.find (fun f -> f.Vertex = x))
                     .ShortestDistance
+                    with
+                | Some f -> f
+                | None -> 0
+
+            let availableToVisit = exclude x.Links visited
 
             let newState =
                 state
                 |> List.map (fun f ->
-                    match (x.Links |> List.tryFind (fun g -> f.Vertex = g)) with
-                    | Some n when
-                        f.ShortestDistance.IsSome
-                        && currentDistance.IsSome
-                        && f.ShortestDistance.Value > currentDistance.Value
-                        ->
-                        { f with ShortestDistance = Some(currentDistance.Value + 1) }
-                    | Some n -> f
-                    | None when currentDistance.IsSome -> { f with ShortestDistance = Some(currentDistance.Value) }
+                    match ((availableToVisit) |> List.tryFind (fun g -> f.Vertex = g)) with
+                    | Some n when f.ShortestDistance.IsNone || (f.ShortestDistance.Value > currentDistance) ->
+                        { f with ShortestDistance = Some(currentDistance + 1); Previous = Some x }
+                    | Some n -> { f with Previous = Some x }
                     | None -> f)
 
-            // If distance is shorter than present, update state
-            let toVsit =
-                (unvisited |> (List.map (fun f -> List.find (fun g -> f = g.Vertex) state)))
-                |> List.filter (fun f -> not (List.contains f.Vertex visited))
-                |> List.sortBy (fun f -> match f.ShortestDistance with
-                                          | Some n -> n
-                                          | None -> Int32.MaxValue)
-                |> List.map (fun f -> f.Vertex)
-            SolveMapRec (x :: visited) (toVsit) (newState)
+            let ToVisit2 =
+                ((x.Links |> List.filter (fun f -> (List.tryFind (fun g -> f = g) visited).IsNone))
+                 @ (List.filter (fun f -> (List.tryFind (fun g -> g = f) f.Links).IsSome) unvisited))
+            // |> List.filter (fun f -> (List.tryFind (fun g -> f = g) visited).IsNone)
+
+            let toVisit3 = (ToVisit2 @ (exclude xs ToVisit2))
+            // SolveMapRec (x :: visited) (ToVisit2 @ (exclude xs ToVisit2)) (newState) (Some x)
+            SolveMapRec (x :: visited) (toVisit3) (newState) (Some x)
         | [] -> state
 
-    let output = SolveMapRec [] vertices initialState
+    let output = SolveMapRec [] vertices initialState None
     output
 
 [<EntryPoint>]
@@ -131,8 +156,10 @@ let main argv =
         let input = ParseInput(File.ReadAllLines argv[0])
         let allNodes = input.Tiles |> Seq.cast<Node> |> Seq.toList
         let solved = SolveMapDijkstra input.Start input.End allNodes
+        let shortest = solved |> List.find (fun f -> f.Vertex = input.End)
+        let xx = solved |> List.sortByDescending (fun f -> f.ShortestDistance)
 
-        // printfn $"[* ] Shortest solution found uses %i{fst(solved[0]).Length} steps!"
+        printfn $"[* ] Shortest solution found uses %A{shortest.ShortestDistance} steps!"
         0
     | _ ->
         printfn "Did not find file!"
