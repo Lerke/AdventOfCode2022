@@ -24,6 +24,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day11.MonkeyInTheMiddle", "
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day12.HillClimbingAlgorithm", "Day12.HillClimbingAlgorithm\Day12.HillClimbingAlgorithm.fsproj", "{66B44B00-88C4-4A2D-8C9C-0BBBFA2D6BAF}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Day13.DistressSignal", "Day13.DistressSignal\Day13.DistressSignal.fsproj", "{5EB5BFE6-FC61-44D6-BFEF-2BC0FA601E36}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,5 +80,9 @@ Global
 		{66B44B00-88C4-4A2D-8C9C-0BBBFA2D6BAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{66B44B00-88C4-4A2D-8C9C-0BBBFA2D6BAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{66B44B00-88C4-4A2D-8C9C-0BBBFA2D6BAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EB5BFE6-FC61-44D6-BFEF-2BC0FA601E36}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EB5BFE6-FC61-44D6-BFEF-2BC0FA601E36}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EB5BFE6-FC61-44D6-BFEF-2BC0FA601E36}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EB5BFE6-FC61-44D6-BFEF-2BC0FA601E36}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
